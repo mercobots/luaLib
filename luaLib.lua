@@ -423,6 +423,12 @@ location_to_string = function(loc)
     return tostring((string.format("Location(%d, %d)", loc:getX(), loc:getY())))
 end
 
+--
+
+region_to_string = function(r)
+    return tostring((string.format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH())))
+end
+
 table_to_string = function(table, space)
 
     space = space or ""
@@ -430,8 +436,10 @@ table_to_string = function(table, space)
 
     for key, value in pairs(table) do
         text = text .. "\n\t" .. space .. tostring(key) .. " = "
-        if typeOf(value) == "userdata" then
+        if gettype(value) == "Location" then
             text = text .. location_to_string(value)
+        elseif gettype(value) == "Region" then
+            text = text .. region_to_string(value)
         elseif is_table(value) then
             text = text .. table_to_string(value, space .. "\t")
         elseif is_string(value) then
