@@ -199,6 +199,14 @@ count = function(a)
     return count
 end
 
+--  Checks if a value exists in an array/table
+-- ----------------------------------------------
+function in_table(t, i)
+    for i, t in ipairs(t) do
+        if (t == i) then return true end
+    end
+    return false
+end
 
 -- ===================================
 -- Filesystem Functions
@@ -264,7 +272,7 @@ rmdir = function(p)
 end
 
 copy = function(s, d)
-    if os.execute("cp -f  \"" .. s .. "\" \"" .. d .. "\"") then
+    if os.execute("cp -Rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then
         return true
     else
         return false
@@ -371,7 +379,7 @@ function scandir(scan_dir, temp)
     temp = temp or "/sdcard/__temp/"
     local list_file = temp .. "_scandir_"
     --
-    local create_list_file = "ls " .. scan_dir .. " > " .. list_file
+    local create_list_file = "ls \"" .. scan_dir .. "\" > " .. list_file
 
     mkdir(temp)
     os.execute(create_list_file)
@@ -467,3 +475,5 @@ is_array = function(...) return is_table(...) end
 clone_array = function(...) return clone_table(...) end
 -- alias of clone_table
 array_to_string = function(...) return table_to_string(...) end
+-- alias of in_table
+in_array = function(...) return in_table(...) end
