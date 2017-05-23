@@ -201,9 +201,9 @@ end
 
 --  Checks if a value exists in an array/table
 -- ----------------------------------------------
-function in_table(t, i)
-    for i, t in ipairs(t) do
-        if (t == i) then return true end
+function in_table(tb, v)
+    for i, t in ipairs(tb) do
+        if (t == v) then return true end
     end
     return false
 end
