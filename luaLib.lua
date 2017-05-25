@@ -440,33 +440,38 @@ end
 
 -- Finds out whether a variable is a Location
 -- ----------------------------------------------
-is_location = function(l) if gettype(l) == "Location" then return true end return false end
+is_location = function(v) if gettype(v) == "Location" then return true end return false end
 
 -- Finds out whether a variable is a Region
 -- ----------------------------------------------
-is_region = function(r) if gettype(r) == "Region" then return true end return false end
+is_region = function(v) if gettype(v) == "Region" then return true end return false end
 
 -- Finds out whether a variable is a Match
 -- ----------------------------------------------
-is_match = function(m) if gettype(m) == "Match" then return true end return false end
+is_match = function(v) if gettype(v) == "Match" then return true end return false end
 
 -- Finds out whether a variable is a Pattern
 -- ----------------------------------------------
-is_pattern = function(p) if gettype(p) == "Pattern" then return true, p:getFileName() end return false, "_none_" end
+is_pattern = function(v) if gettype(v) == "Pattern" then return true, p:getFileName() end return false, "_none_" end
 
 -- Auto highlight any img,region,match or location
 -- ----------------------------------------------
 debug_r = function(title, var, time)
-    local x, y, w, h = 0,0,0,0
-    time = time or 3
     if DEBUG_R == true or DEBUG_R == nil then
+        local x, y, w, h = 0, 0, 0, 0
+        local tp = ""
+        time = time or 3
         if is_table(var) then
             x = var[1] y = var[2] w = var[3] or 10 h = var[4] or 10
+            tp = not var[3] and "Table(Location)" or "Table(Region)"
         elseif is_region(var) or is_match(var) then
+            tp =  is_region(var) and "Region" or "Match"
             x = var:getX() y = var:getY() w = var:getW() h = var:getH()
         elseif is_location(var) then
+            tp = "Location"
             x = var:getX() - 10 y = var:getY() - 10 w = 20 h = 20
         elseif is_pattern(var) or is_string(var) then
+            tp =  is_string(var) and "String" or "Pattern"
             if exists(var) then
                 local m = getLastMatch()
                 local target = m:getTarget()
@@ -480,8 +485,22 @@ debug_r = function(title, var, time)
                 toast("IMG not found")
             end
         end
-        toast(title)
+        toast(tp .. " | "..title)
         Region(x, y, w, h):highlight(time)
+    end
+end
+
+-- highlight a image(string)
+-- ----------------------------------------------
+img_r = function(v, time)
+    time = time or 2
+    local t = Timer()
+    local p = v
+    if is_string(v) then p = Pattern(str_replace(v, ".png", "") .. ".png") end
+
+    if exists(p) then
+        debug_r(p:getFileName() .. " - time elapsed: " .. t:set(), getLastMatch(), time)
+        return v
     end
 end
 
