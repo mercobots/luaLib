@@ -290,6 +290,26 @@ is_dir = function(s)
     end
 end
 
+-- List files and directories inside the specified path
+-- ----------------------------------------------
+function scandir(scan_dir, temp)
+    temp = temp or "/sdcard/__temp/"
+    local list_file = temp .. "_scandir_"
+    --
+    local create_list_file = "ls \"" .. scan_dir .. "\" > " .. list_file
+
+    mkdir(temp)
+    os.execute(create_list_file)
+
+    local lines = {}
+
+    for line in io.lines(list_file) do
+        lines[#lines + 1] = line
+    end
+
+    rmdir(list_file)
+    return lines
+end
 
 -- Returns information about a file path
 -- ----------------------------------------------
@@ -373,26 +393,6 @@ clone_table = function(t)
     return copy
 end
 
--- List files and directories inside the specified path
--- ----------------------------------------------
-function scandir(scan_dir, temp)
-    temp = temp or "/sdcard/__temp/"
-    local list_file = temp .. "_scandir_"
-    --
-    local create_list_file = "ls \"" .. scan_dir .. "\" > " .. list_file
-
-    mkdir(temp)
-    os.execute(create_list_file)
-
-    local lines = {}
-
-    for line in io.lines(list_file) do
-        lines[#lines + 1] = line
-    end
-
-    rmdir(list_file)
-    return lines
-end
 
 -- ===================================
 -- others functions
@@ -426,17 +426,67 @@ end
 -- Ankulua extends
 -- ===================================
 
-
+-- converts a location to string
+-- ----------------------------------------------
 location_to_string = function(loc)
     return tostring((string.format("Location(%d, %d)", loc:getX(), loc:getY())))
 end
 
---
-
+-- converts a region to string
+-- ----------------------------------------------
 region_to_string = function(r)
     return tostring((string.format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH())))
 end
 
+-- Finds out whether a variable is a Location
+-- ----------------------------------------------
+is_location = function(l) if gettype(l) == "Location" then return true end return false end
+
+-- Finds out whether a variable is a Region
+-- ----------------------------------------------
+is_region = function(r) if gettype(r) == "Region" then return true end return false end
+
+-- Finds out whether a variable is a Match
+-- ----------------------------------------------
+is_match = function(m) if gettype(m) == "Match" then return true end return false end
+
+-- Finds out whether a variable is a Pattern
+-- ----------------------------------------------
+is_pattern = function(p) if gettype(p) == "Pattern" then return true, p:getFileName() end return false, "_none_" end
+
+-- Auto highlight any img,region,match or location
+-- ----------------------------------------------
+debug_r = function(title, var, time)
+    local x, y, w, h = 0,0,0,0
+    time = time or 3
+    if DEBUG_R == true or DEBUG_R == nil then
+        if is_table(var) then
+            x = var[1] y = var[2] w = var[3] or 10 h = var[4] or 10
+        elseif is_region(var) or is_match(var) then
+            x = var:getX() y = var:getY() w = var:getW() h = var:getH()
+        elseif is_location(var) then
+            x = var:getX() - 10 y = var:getY() - 10 w = 20 h = 20
+        elseif is_pattern(var) or is_string(var) then
+            if exists(var) then
+                local m = getLastMatch()
+                local target = m:getTarget()
+                local center = m:getCenter()
+                x = m:getX() y = m:getY() w = m:getW() h = m:getH()
+                toast("IMG - Target | " .. title)
+                Region(target:getX() - 10, target:getY() - 10, 20, 20):highlight(time)
+                toast("IMG - Center | " .. title)
+                Region(center:getX() - 10, center:getY() - 10, 20, 20):highlight(time)
+            else
+                toast("IMG not found")
+            end
+        end
+        toast(title)
+        Region(x, y, w, h):highlight(time)
+    end
+end
+
+-- converts a table to string
+-- ----------------------------------------------
 table_to_string = function(table, space)
 
     space = space or ""
