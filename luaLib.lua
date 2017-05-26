@@ -11,53 +11,23 @@ end
 
 -- Find whether the type of a variable is string
 -- ----------------------------------------------
-is_string = function(s)
-    if (typeOf(s) == "string") then
-        return true
-    else
-        return false
-    end
-end
+is_string = function(s) if (typeOf(s) == "string") then return true end end
 
 -- Finds out whether a variable is a boolean
 -- ----------------------------------------------
-is_bool = function(b)
-    if typeOf(b) == "boolean" then
-        return true
-    else
-        return false
-    end
-end
+is_bool = function(b) if typeOf(b) == "boolean" then return true end return false end
 
 -- Finds whether a variable is a number or a numeric string
 -- ----------------------------------------------
-is_numeric = function(n)
-    if tonumber(n) ~= nil then
-        return true
-    else
-        return false
-    end;
-end
+is_numeric = function(n) if tonumber(n) ~= nil then return true end return false end
 
 -- Finds whether the type of a variable is float
 -- ----------------------------------------------
-is_float = function(n)
-    if n ~= math.floor(n) then
-        return true
-    else
-        return false
-    end
-end
+is_float = function(n) if n ~= math.floor(n) then return true end return false end
 
 -- Finds whether a variable is an array
 -- ----------------------------------------------
-is_table = function(t)
-    if (typeOf(t) == "table") then
-        return true
-    else
-        return false
-    end
-end
+is_table = function(t) if (typeOf(t) == "table") then return true end return false end
 
 -- print hole table and sub-tables values
 -- ----------------------------------------------
@@ -150,15 +120,11 @@ end
 
 -- Strip whitespace from the beginning and end of a string
 -- ----------------------------------------------
-trim = function(s)
-    return (s:gsub("^%s*(.-)%s*$", "%1"))
-end
+trim = function(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
 
 -- Strip whitespace from the beginning of a string
 -- ----------------------------------------------
-ltrim = function(s)
-    return (s:gsub("^%s*", ""))
-end
+ltrim = function(s) return (s:gsub("^%s*", "")) end
 
 --  Strip whitespace from the end of a string
 -- ----------------------------------------------
@@ -214,10 +180,7 @@ end
 
 -- Returns trailing name component of path
 -- ----------------------------------------------
-basename = function(p)
-    local t = explode(p, "/")
-    return t[#t]
-end
+basename = function(p) local t = explode(p, "/") return t[#t] end
 
 -- Returns a parent directory's path
 -- ----------------------------------------------
@@ -253,42 +216,22 @@ end
 
 -- Makes directory
 -- ----------------------------------------------
-mkdir = function(p)
-    if os.execute("mkdir -p \"" .. p .. "\"") == 0 then
-        return true
-    else
-        return false
-    end
-end
+mkdir = function(p) if os.execute("mkdir -p \"" .. p .. "\"") == 0 then return true end return false end
 
 -- Removes directory
 -- ----------------------------------------------
-rmdir = function(p)
-    if os.execute("rm -rf  \"" .. p .. "\"") == 0 then
-        return true
-    else
-        return false
-    end
-end
+rmdir = function(p) if os.execute("rm -rf  \"" .. p .. "\"") == 0 then return true end return false end
 
 copy = function(s, d)
-    if os.execute("cp -Rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then
-        return true
-    else
-        return false
-    end
+    if mkdir(d) and os.execute("cp -rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then return true end return false
 end
+
 
 -- Tells whether the filename is a directory
 -- TODO : find another way
 -- ----------------------------------------------
-is_dir = function(s)
-    if is_string(s) and not s:match("(.+)%..+") then
-        return true
-    else
-        return false
-    end
-end
+is_dir = function(s) if is_string(s) and not s:match("(.+)%..+") then return true end return false end
+
 
 -- List files and directories inside the specified path
 -- ----------------------------------------------
@@ -344,9 +287,7 @@ end
 
 -- simulate home botton
 -- ----------------------------------------------
-btn_home = function()
-    keyevent(3)
-end
+btn_home = function() keyevent(3) end
 
 -- simulate back botton
 -- ----------------------------------------------
@@ -400,9 +341,7 @@ end
 
 -- check odd
 -- ----------------------------------------------
-odd = function(n)
-    return not (n % 2 == 0)
-end
+odd = function(n) return not (n % 2 == 0) end
 
 -- creates a random string
 -- ----------------------------------------------
@@ -428,15 +367,11 @@ end
 
 -- converts a location to string
 -- ----------------------------------------------
-location_to_string = function(loc)
-    return tostring((string.format("Location(%d, %d)", loc:getX(), loc:getY())))
-end
+location_to_string = function(loc) return tostring((string.format("Location(%d, %d)", loc:getX(), loc:getY()))) end
 
 -- converts a region to string
 -- ----------------------------------------------
-region_to_string = function(r)
-    return tostring((string.format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH())))
-end
+region_to_string = function(r) return tostring((string.format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH()))) end
 
 -- Finds out whether a variable is a Location
 -- ----------------------------------------------
@@ -465,13 +400,13 @@ debug_r = function(title, var, time)
             x = var[1] y = var[2] w = var[3] or 10 h = var[4] or 10
             tp = not var[3] and "Table(Location)" or "Table(Region)"
         elseif is_region(var) or is_match(var) then
-            tp =  is_region(var) and "Region" or "Match"
+            tp = is_region(var) and "Region" or "Match"
             x = var:getX() y = var:getY() w = var:getW() h = var:getH()
         elseif is_location(var) then
             tp = "Location"
             x = var:getX() - 10 y = var:getY() - 10 w = 20 h = 20
         elseif is_pattern(var) or is_string(var) then
-            tp =  is_string(var) and "String" or "Pattern"
+            tp = is_string(var) and "String" or "Pattern"
             if exists(var) then
                 local m = getLastMatch()
                 local target = m:getTarget()
@@ -485,7 +420,7 @@ debug_r = function(title, var, time)
                 toast("IMG not found")
             end
         end
-        toast(tp .. " | "..title)
+        toast(tp .. " | " .. title)
         Region(x, y, w, h):highlight(time)
     end
 end
@@ -496,12 +431,14 @@ img_r = function(v, time)
     time = time or 2
     local t = Timer()
     local p = v
-    if is_string(v) then p = Pattern(str_replace(v, ".png", "") .. ".png") end
-
+    if is_string(v) then
+        v = str_replace(v, ".png", "") .. ".png"
+        p = Pattern(v)
+    end
     if exists(p) then
         debug_r(p:getFileName() .. " - time elapsed: " .. t:set(), getLastMatch(), time)
-        return v
     end
+    return v
 end
 
 -- converts a table to string
