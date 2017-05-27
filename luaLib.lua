@@ -178,6 +178,11 @@ end
 -- Filesystem Functions
 -- ===================================
 
+-- Tells whether the filename is a directory
+-- TODO : find another way
+-- ----------------------------------------------
+is_dir = function(s) if is_string(s) and not s:match("(.+)%..+") then return true end return false end
+
 -- Returns trailing name component of path
 -- ----------------------------------------------
 basename = function(p) local t = explode(p, "/") return t[#t] end
@@ -191,7 +196,6 @@ dirname = function(s)
     end
     return r
 end
-
 
 -- Returns a parent directory's path
 -- ----------------------------------------------
@@ -226,20 +230,13 @@ copy = function(s, d)
     if mkdir(d) and os.execute("cp -rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then return true end return false
 end
 
-
--- Tells whether the filename is a directory
--- TODO : find another way
--- ----------------------------------------------
-is_dir = function(s) if is_string(s) and not s:match("(.+)%..+") then return true end return false end
-
-
 -- List files and directories inside the specified path
 -- ----------------------------------------------
 function scandir(scan_dir, temp)
     temp = temp or "/sdcard/__temp/"
     local list_file = temp .. "_scandir_"
     --
-    local create_list_file = "ls \"" .. scan_dir .. "\" > " .. list_file
+    local create_list_file = "ls " .. scan_dir .. " > " .. list_file
 
     mkdir(temp)
     os.execute(create_list_file)
