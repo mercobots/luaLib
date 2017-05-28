@@ -465,13 +465,8 @@ table_to_string = function(table, space)
     return text
 end
 
--- Return all the values of an region
+-- Return all the values of an region,location,match or table
 -- ----------------------------------------------
-region_values = function(r) return { x = r:getX(), y = r:getY(), w = r:getW(), h = r:getH() } end
-
--- Return all the values of an region
--- ----------------------------------------------
-location_values = function(r) return { x = r:getX(), y = r:getY() } end
 
 get_values = function(v)
     if is_location(v) then return { x = v:getX(), y = v:getY() }
