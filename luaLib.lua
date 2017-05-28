@@ -426,16 +426,15 @@ end
 -- ----------------------------------------------
 img_r = function(v, time)
     time = time or 2
-    local t = Timer()
-    local p = v
-    if is_string(v) then
-        v = str_replace(v, ".png", "") .. ".png"
-        p = Pattern(v)
+    if is_string(v) then v = str_replace(v, ".png", "") .. ".png"
+        if DEBUG_R == true or DEBUG_R == nil then
+            local t = Timer()
+            local p = v
+            if is_string(v) then p = Pattern(v) else p = v end
+            if exists(p) then debug_r(p:getFileName() .. " - time elapsed: " .. t:set(), getLastMatch(), time) end
+        end
+        return v
     end
-    if exists(p) then
-        debug_r(p:getFileName() .. " - time elapsed: " .. t:set(), getLastMatch(), time)
-    end
-    return v
 end
 
 -- converts a table to string
@@ -465,6 +464,25 @@ table_to_string = function(table, space)
     text = text .. "\n" .. space .. "}\n"
     return text
 end
+
+-- Return all the values of an region
+-- ----------------------------------------------
+region_values = function(r) return { x = r:getX(), y = r:getY(), w = r:getW(), h = r:getH() } end
+
+-- Return all the values of an region
+-- ----------------------------------------------
+location_values = function(r) return { x = r:getX(), y = r:getY() } end
+
+get_values = function(v)
+    if is_location(v) then return { x = v:getX(), y = v:getY() }
+    elseif is_region(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH() }
+    elseif is_match(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH(), center = get_values(v:getCenter()), score = v:getScore(), target = get_values(v:getTarget()) }
+    elseif is_table(v) then local r = {} for k, n in pairs(v) do r[#r + 1] = n end return r
+    else return {}
+    end
+end
+
+
 
 -- ===================================
 -- Alias functions
