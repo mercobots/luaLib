@@ -426,15 +426,13 @@ end
 -- ----------------------------------------------
 img_r = function(v, time)
     time = time or 2
-    if is_string(v) then v = str_replace(v, ".png", "") .. ".png"
-        if DEBUG_R == true or DEBUG_R == nil then
-            local t = Timer()
-            local p = v
-            if is_string(v) then p = Pattern(v) else p = v end
-            if exists(p) then debug_r(p:getFileName() .. " - time elapsed: " .. t:set(), getLastMatch(), time) end
-        end
-        return v
+    if not is_string(v) then toast("strign expected at img_r ->" .. gettype(v)) return v end
+    v = str_replace(v, ".png", "") .. ".png"
+    if DEBUG_R == true or DEBUG_R == nil then
+        local t = Timer()
+        if exists(v) then debug_r(v .. " - time elapsed: " .. t:set(), getLastMatch(), time) end
     end
+    return v
 end
 
 -- converts a table to string
@@ -467,17 +465,36 @@ end
 
 -- Return all the values of an region,location,match or table
 -- ----------------------------------------------
-
 get_values = function(v)
     if is_location(v) then return { x = v:getX(), y = v:getY() }
     elseif is_region(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH() }
     elseif is_match(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH(), center = get_values(v:getCenter()), score = v:getScore(), target = get_values(v:getTarget()) }
-    elseif is_table(v) then local r = {} for k, n in pairs(v) do r[#r + 1] = n end return r
+    elseif is_table(v) then local r = {} for k, n in pairs(v) do r[#r + 1] = n
+    end return r
     else return {}
     end
 end
 
+-- Checks the timeout of a variable
+-- ----------------------------------------------
+is_timeout = function(timer, time_out)
+    if timer:check() > time_out then return true end return false
+end
 
+-- Format seconds to clock time
+-- ----------------------------------------------
+get_clock = function(t)
+    t = tonumber(t)
+    local r = { h = 00, m = 00, s = 00 }
+    local s = "00:00:00"
+    if t > 0 then
+        r.h = string.format("%02.f", math.floor(t / 3600));
+        r.m = string.format("%02.f", math.floor(t / 60 - (r.m * 60)));
+        r.s = string.format("%02.f", math.floor(t - r.h * 3600 - r.m * 60));
+        s = r.h .. ":" .. r.m .. ":" .. r.s
+    end
+    return s, r
+end
 
 -- ===================================
 -- Alias functions
