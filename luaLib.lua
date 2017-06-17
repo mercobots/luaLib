@@ -167,12 +167,22 @@ end
 
 --  Checks if a value exists in an array/table
 -- ----------------------------------------------
-function in_table(tb, v)
+in_table = function (tb, v)
     for i, t in ipairs(tb) do
         if (t == v) then return true end
     end
     return false
 end
+
+table_reverse=function(t)
+    local r = {}
+    local i = #t
+    for k, v in ipairs(t) do
+        r[i + 1 - k] = v
+    end
+    return r
+end
+
 
 -- ===================================
 -- Filesystem Functions
@@ -238,8 +248,9 @@ function scandir(scan_dir, temp)
     --
     local create_list_file = "ls " .. scan_dir .. " > " .. list_file
 
-    mkdir(temp)
-    os.execute(create_list_file)
+    if not mkdir(temp) then return false, "_mkdir_" end
+
+    if os.execute(create_list_file) ~= 0 then return false, "_list_" end
 
     local lines = {}
 
@@ -247,7 +258,7 @@ function scandir(scan_dir, temp)
         lines[#lines + 1] = line
     end
 
-    rmdir(list_file)
+    if not rmdir(list_file) then return false, "_rmdir_" end
     return lines
 end
 
@@ -384,7 +395,7 @@ is_match = function(v) if gettype(v) == "Match" then return true end return fals
 
 -- Finds out whether a variable is a Pattern
 -- ----------------------------------------------
-is_pattern = function(v) if gettype(v) == "Pattern" then return true, p:getFileName() end return false, "_none_" end
+is_pattern = function(v) if gettype(v) == "Pattern" then return true, v:getFileName() end return false, "_none_" end
 
 -- Auto highlight any img,region,match or location
 -- ----------------------------------------------
@@ -510,3 +521,5 @@ clone_array = function(...) return clone_table(...) end
 array_to_string = function(...) return table_to_string(...) end
 -- alias of in_table
 in_array = function(...) return in_table(...) end
+-- alias of in_table
+array_reverse = function(...) return table_reverse(...) end
