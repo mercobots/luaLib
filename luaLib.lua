@@ -449,12 +449,10 @@ end
 -- converts a table to string
 -- ----------------------------------------------
 table_to_string = function(table, space)
-
     space = space or ""
     local text = "{"
-
     for key, value in pairs(table) do
-        text = text .. "\n\t" .. space .. tostring(key) .. " = "
+        if not is_numeric(key) then text = text .. "\n\t" .. space .. tostring(key) .. " = " end
         if gettype(value) == "Location" then
             text = text .. location_to_string(value)
         elseif gettype(value) == "Region" then
