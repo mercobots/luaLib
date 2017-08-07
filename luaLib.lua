@@ -167,20 +167,67 @@ end
 
 --  Checks if a value exists in an array/table
 -- ----------------------------------------------
-in_table = function (tb, v)
+in_table = function(tb, v)
     for i, t in ipairs(tb) do
         if (t == v) then return true end
     end
     return false
 end
 
-table_reverse=function(t)
+table_reverse = function(t)
     local r = {}
     local i = #t
     for k, v in ipairs(t) do
         r[i + 1 - k] = v
     end
     return r
+end
+
+-- Validate table structure and avoid prints
+-- ----------------------------------------------
+function validate_table(file, rules)
+    -- rues for tables
+    rules = rules or { "table", "number", "boolean", "string" }
+
+    -- no file given
+    if not file then return false, "_file_not_set_" end
+
+    -- check file types
+    if not is_string(file) and not is_table(file) then return false, "_file_bad_type" end
+
+    -- if file check if sxists
+    if is_string(file) and not fileExists(file) then return false, "_file_not_found_" end
+
+    -- if file is a table
+    if is_table(file) then
+        for k, v in pairs(file) do
+            if in_table(rules, gettype(v)) then
+                if is_table(v) then validate_table(v, rules) end
+            else
+                return false, "_table_bad_format_"
+            end
+        end
+    else
+        -- reset prints functions
+        local old_print, old_toast, old_print_r = print, toast, print_r
+        --
+        print, toast, print_r = nil, nil, nil
+
+        -- secure the load file
+        local status, data = pcall(dofile, file)
+
+        -- reset print functions
+        print, toast, print_r = old_print, old_toast, old_print_r
+
+        -- if any error on load
+        if status then
+            return validate_table(data, rules)
+        else
+            return false, "_critical_"
+        end
+    end
+
+    return file
 end
 
 
@@ -515,9 +562,11 @@ is_double = function(...) return is_float(...) end
 is_array = function(...) return is_table(...) end
 -- alias of clone_table
 clone_array = function(...) return clone_table(...) end
--- alias of clone_table
+-- alias of table_to_string
 array_to_string = function(...) return table_to_string(...) end
 -- alias of in_table
 in_array = function(...) return in_table(...) end
--- alias of in_table
+-- alias of table_reverse
 array_reverse = function(...) return table_reverse(...) end
+-- alias of validate_table
+validate_array = function(...) return validate_table(...) end
