@@ -112,6 +112,18 @@ print_r = function(t, name, indent)
     print(table.show(t, name, indent))
 end
 
+-- developer print
+-- ----------------------------------------------
+dprint = function(...) if DEVELOPER == true then print(...) end end
+
+-- developer print_r
+-- ----------------------------------------------
+dprint_r = function(...) if DEVELOPER == true then print_r(...) end end
+
+-- developer toast
+-- ----------------------------------------------
+dtoast = function(...) if DEVELOPER == true then toast(...) end end
+
 
 -- ===================================
 -- String Functions
@@ -209,15 +221,15 @@ function validate_table(file, rules)
         end
     else
         -- reset prints functions
-        local old_print, old_toast, old_print_r = print, toast, print_r
+        local old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast = print, toast, print_r, dprint, dprint_r, dtoast
         --
-        print, toast, print_r = nil, nil, nil
+        print, toast, print_r, dprint, dprint_r, dtoast = nil, nil, nil, nil, nil, nil
 
         -- secure the load file
         local status, data = pcall(dofile, file)
 
         -- reset print functions
-        print, toast, print_r = old_print, old_toast, old_print_r
+        print, toast, print_r, dprint, dprint_r, dtoast = old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast
 
         -- if any error on load
         if status then
