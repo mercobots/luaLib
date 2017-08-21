@@ -228,7 +228,7 @@ function validate_table(file, rules)
         -- secure the load file
         local status, data = pcall(dofile, file)
 
-        -- reset print functions
+        -- set print functions
         print, toast, print_r, dprint, dprint_r, dtoast = old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast
 
         -- if any error on load
@@ -564,6 +564,30 @@ get_clock = function(t)
     return s, r
 end
 
+-- Extend ankulua preferencePut* to save regions
+-- lcations and tables
+-- ----------------------------------------------
+preferencePutData = function(v, o)
+    if is_region(o) then
+        preferencePutString(v, string.format("Region(%d, %d, %d, %d)", o:getX(), o:getY(), o:getW(), o:getH()))
+    elseif is_location(o) then
+        preferencePutString(v, string.format("Location(%d, %d)", o:getX(), o:getY()))
+    elseif is_table(o) then
+        preferencePutString(v, table_to_string(o))
+    else
+        return false
+    end
+    return true
+end
+
+--
+preferenceGetData = function(v, s)
+    if is_string(s) and preferenceGetString(v, s) then
+        return loadstring('return ' .. preferenceGetString(v, s))()
+    end
+    return false
+end
+
 -- ===================================
 -- Alias functions
 -- ===================================
@@ -582,3 +606,29 @@ in_array = function(...) return in_table(...) end
 array_reverse = function(...) return table_reverse(...) end
 -- alias of validate_table
 validate_array = function(...) return validate_table(...) end
+-- alias of preferencePutData
+preferencePutRegion = function(...) return preferencePutData(...) end
+preferencePutLocation = function(...) return preferencePutData(...) end
+preferencePutTable = function(...) return preferencePutData(...) end
+preferencePutArray = function(...) return preferencePutData(...) end
+-- alias of preferenceGetData
+preferenceGetRegion = function(...) return preferenceGetData(...) end
+preferenceGetLocation = function(...) return preferenceGetData(...) end
+preferenceGetTable = function(...) return preferenceGetData(...) end
+preferenceGetArray = function(...) return preferenceGetData(...) end
+
+-- ===================================
+-- ChangeLog
+-- ===================================
+
+if preferenceGetBoolean("LOG_2017/08/21",true) then
+    print("Lualib ChangeLog - 2017/08/21")
+    print("\n#New#\n")
+    print("- preferencePutData()")
+    print("- preferenceGetData()")
+    print("- dprint()")
+    print("- dprint_r()")
+    print("- dtoast()")
+    print("- validate_table()")
+end
+preferencePutBoolean("LOG_2017/08/21",false)
