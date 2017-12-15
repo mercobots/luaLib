@@ -299,28 +299,6 @@ copy = function(s, d)
     if mkdir(d) and os.execute("cp -rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then return true end return false
 end
 
--- List files and directories inside the specified path
--- ----------------------------------------------
-function scandir(scan_dir, temp)
-    temp = temp or "/sdcard/__temp/"
-    local list_file = temp .. "_scandir_"
-    --
-    local create_list_file = "ls " .. scan_dir .. " > " .. list_file
-
-    if not mkdir(temp) then return false, "_mkdir_" end
-
-    if os.execute(create_list_file) ~= 0 then return false, "_list_" end
-
-    local lines = {}
-
-    for line in io.lines(list_file) do
-        lines[#lines + 1] = line
-    end
-
-    if not rmdir(list_file) then return false, "_rmdir_" end
-    return lines
-end
-
 -- Returns information about a file path
 -- ----------------------------------------------
 pathinfo = function(p, op)
@@ -347,6 +325,28 @@ pathinfo = function(p, op)
     end
 end
 
+-- List files and directories inside the specified path
+-- ----------------------------------------------
+function scandir(scan_dir, temp)
+    temp = temp or "/sdcard/__temp/"
+    local list_file = temp .. "_scandir_"
+    --
+    local create_list_file = "ls " .. scan_dir .. " > " .. list_file
+
+    if not mkdir(temp) then return false, "_mkdir_" end
+
+    if os.execute(create_list_file) ~= 0 then return false, "_list_" end
+    local lines = {}
+
+    for line in io.lines(list_file) do
+        lines[#lines + 1] = line
+    end
+
+    --if not rmdir(list_file) then return false, "_rmdir_" end
+    return lines
+end
+
+
 -- ===================================
 -- Android function
 -- ===================================
@@ -360,9 +360,18 @@ btn_home = function() keyevent(3) end
 -- ----------------------------------------------
 btn_back = function(i, w)
     i = i or 1
-    w = w or 0
+    w = w or 0.1
     while i > 0 do
-        keyevent(4)
+        local status, result = pcall(keyevent, 4)
+
+        if not status then
+            wait(1)
+            toast("keyevent(4) ERROR")
+            toast("keyevent(4) ERROR")
+            toast("keyevent(4) ERROR")
+            pcall(keyevent, 4)
+        end
+
         wait(w)
         i = i - 1
     end
@@ -458,7 +467,7 @@ is_pattern = function(v) if gettype(v) == "Pattern" then return true, v:getFileN
 
 -- Auto highlight any img,region,match or location
 -- ----------------------------------------------
-debug_r = function(title, var, time)
+debug_r = function(var, title, time)
     if DEBUG_R == true or DEBUG_R == nil then
         local x, y, w, h = 0, 0, 0, 0
         local tp = ""
@@ -479,28 +488,33 @@ debug_r = function(title, var, time)
                 local target = m:getTarget()
                 local center = m:getCenter()
                 x = m:getX() y = m:getY() w = m:getW() h = m:getH()
-                toast("IMG - Target | " .. title)
+                toast("IMG - Target | " .. (title and title or ""))
                 Region(target:getX() - 10, target:getY() - 10, 20, 20):highlight(time)
-                toast("IMG - Center | " .. title)
+                toast("IMG - Center | " .. (title and title or ""))
                 Region(center:getX() - 10, center:getY() - 10, 20, 20):highlight(time)
             else
                 toast("IMG not found")
             end
         end
-        toast(tp .. " | " .. title)
+        toast(tp .. " | " .. (title and title or ""))
         Region(x, y, w, h):highlight(time)
     end
 end
 
 -- highlight a image(string)
 -- ----------------------------------------------
-img_r = function(v, time)
+img_r = function(v, r, time)
     time = time or 2
     if not is_string(v) then toast("strign expected at img_r ->" .. gettype(v)) return v end
     v = str_replace(v, ".png", "") .. ".png"
     if DEBUG_R == true or DEBUG_R == nil then
         local t = Timer()
-        if exists(v) then debug_r(v .. " - time elapsed: " .. t:set(), getLastMatch(), time) end
+        if r then
+            debug_r(r, "Region of :" .. v, time)
+            if r:exists(v, 0) then debug_r(r:getLastMatch(), v .. " - time elapsed: " .. t:set(), time) end
+        elseif exists(v, 0) then
+            debug_r(getLastMatch(), v .. " - time elapsed: " .. t:set(), time)
+        end
     end
     return v
 end
@@ -511,7 +525,8 @@ table_to_string = function(table, space)
     space = space or ""
     local text = "{"
     for key, value in pairs(table) do
-        if not is_numeric(key) then text = text .. "\n\t" .. space .. tostring(key) .. " = " end
+        if not is_numeric(key) then text = text .. "\n\t" .. space .. tostring(key) .. " = "
+        end
         if gettype(value) == "Location" then
             text = text .. location_to_string(value)
         elseif gettype(value) == "Region" then
@@ -546,7 +561,8 @@ end
 -- Checks the timeout of a variable
 -- ----------------------------------------------
 is_timeout = function(timer, time_out)
-    if timer:check() > time_out then return true end return false
+    if timer:check() > time_out then return true
+    end return false
 end
 
 -- Format seconds to clock time
@@ -582,7 +598,7 @@ end
 
 --
 preferenceGetData = function(v, s)
-    if is_string(s) and preferenceGetString(v, s) then
+    if is_string(v) and preferenceGetString(v, s) then
         return loadstring('return ' .. preferenceGetString(v, s))()
     end
     return false
@@ -593,42 +609,46 @@ end
 -- ===================================
 
 -- alias of is_float
-is_double = function(...) return is_float(...) end
+is_double = function(...) return is_float(...)
+end
 -- alias of is_table
-is_array = function(...) return is_table(...) end
+is_array = function(...) return is_table(...)
+end
 -- alias of clone_table
-clone_array = function(...) return clone_table(...) end
+clone_array = function(...) return clone_table(...)
+end
 -- alias of table_to_string
-array_to_string = function(...) return table_to_string(...) end
+array_to_string = function(...) return table_to_string(...)
+end
 -- alias of in_table
-in_array = function(...) return in_table(...) end
+in_array = function(...) return in_table(...)
+end
 -- alias of table_reverse
-array_reverse = function(...) return table_reverse(...) end
+array_reverse = function(...) return table_reverse(...)
+end
 -- alias of validate_table
-validate_array = function(...) return validate_table(...) end
+validate_array = function(...) return validate_table(...)
+end
 -- alias of preferencePutData
-preferencePutRegion = function(...) return preferencePutData(...) end
-preferencePutLocation = function(...) return preferencePutData(...) end
-preferencePutTable = function(...) return preferencePutData(...) end
-preferencePutArray = function(...) return preferencePutData(...) end
+preferencePutRegion = function(...) return preferencePutData(...)
+end
+preferencePutLocation = function(...) return preferencePutData(...)
+end
+preferencePutTable = function(...) return preferencePutData(...)
+end
+preferencePutArray = function(...) return preferencePutData(...)
+end
 -- alias of preferenceGetData
-preferenceGetRegion = function(...) return preferenceGetData(...) end
-preferenceGetLocation = function(...) return preferenceGetData(...) end
-preferenceGetTable = function(...) return preferenceGetData(...) end
-preferenceGetArray = function(...) return preferenceGetData(...) end
+preferenceGetRegion = function(...) return preferenceGetData(...)
+end
+preferenceGetLocation = function(...) return preferenceGetData(...)
+end
+preferenceGetTable = function(...) return preferenceGetData(...)
+end
+preferenceGetArray = function(...) return preferenceGetData(...)
+end
 
 -- ===================================
 -- ChangeLog
 -- ===================================
 
-if preferenceGetBoolean("LOG_2017/08/21",true) then
-    print("Lualib ChangeLog - 2017/08/21")
-    print("\n#New#\n")
-    print("- preferencePutData()")
-    print("- preferenceGetData()")
-    print("- dprint()")
-    print("- dprint_r()")
-    print("- dtoast()")
-    print("- validate_table()")
-end
-preferencePutBoolean("LOG_2017/08/21",false)
