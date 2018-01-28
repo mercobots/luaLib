@@ -1,8 +1,31 @@
+local _execute = os.execute
+local _typeOf = typeOf
+local _io = io
+local _print = print
+local _toast = toast
+local _pairs = pairs
+local _ipairs = ipairs
+local _tostring = tostring
+local _tonumber = tonumber
+-- math
+local _m_floor = math.floor
+local _m_random = math.random
+-- string
+local _s_format = string.format
+local _s_gsub = string.gsub
+local _s_find = string.find
+local _s_sub = string.sub
+local _s_gmatch = string.gmatch
+local _s_len = string.len
+local _s_lower = string.lower
+local _s_upper = string.upper
+local _s_char = string.char
+--
 -- ===================================
 -- Variable handling Functions
 -- ===================================
-gettype = function(t)
-    local ty = typeOf(t)
+function gettype(t)
+    local ty = _typeOf(t)
     if (ty == "userdata") then
         return (t:typeOf())
     end
@@ -11,27 +34,26 @@ end
 
 -- Find whether the type of a variable is string
 -- ----------------------------------------------
-is_string = function(s) if (typeOf(s) == "string") then return true end end
+function is_string(s) return _typeOf(s) == "string" end
 
 -- Finds out whether a variable is a boolean
 -- ----------------------------------------------
-is_bool = function(b) if typeOf(b) == "boolean" then return true end return false end
+function is_bool(b) return _typeOf(b) == "boolean" end
 
 -- Finds whether a variable is a number or a numeric string
 -- ----------------------------------------------
-is_numeric = function(n) if tonumber(n) ~= nil then return true end return false end
+function is_numeric(n) return _tonumber(n) ~= nil end
 
 -- Finds whether the type of a variable is float
 -- ----------------------------------------------
-is_float = function(n) if n ~= math.floor(n) then return true end return false end
+function is_float(n) return n ~= _m_floor(n) end
 
 -- Finds whether a variable is an array
 -- ----------------------------------------------
-is_table = function(t) if (typeOf(t) == "table") then return true end return false end
+function is_table(t) return _typeOf(t) == "table" end
 
 -- print hole table and sub-tables values
 -- ----------------------------------------------
-
 print_r = function(t, name, indent)
     table.show = function(t, name, indent)
         local cart -- a container
@@ -48,22 +70,22 @@ print_r = function(t, name, indent)
         local function isemptytable(t) return next(t) == nil end
 
         local function basicSerialize(o)
-            local so = tostring(o)
-            if typeOf(o) == "function" then
+            local so = _tostring(o)
+            if _typeOf(o) == "function" then
                 local info = debug.getinfo(o, "S")
                 -- info.name is nil because o is not a calling level
                 if info.what == "C" then
-                    return string.format("%q", so .. ", C function")
+                    return _s_format("%q", so .. ", C function")
                 else
                     -- the information is defined through lines
-                    return string.format("%q", so .. ", defined in (" ..
+                    return _s_format("%q", so .. ", defined in (" ..
                             info.linedefined .. "-" .. info.lastlinedefined ..
                             ")" .. info.source)
                 end
-            elseif typeOf(o) == "number" or typeOf(o) == "boolean" then
+            elseif _typeOf(o) == "number" or _typeOf(o) == "boolean" then
                 return so
             else
-                return string.format("%q", so)
+                return _s_format("%q", so)
             end
         end
 
@@ -74,7 +96,7 @@ print_r = function(t, name, indent)
 
             cart = cart .. indent .. field
 
-            if typeOf(value) ~= "table" then
+            if _typeOf(value) ~= "table" then
                 cart = cart .. " = " .. basicSerialize(value) .. ";\n"
             else
                 if saved[value] then
@@ -88,10 +110,10 @@ print_r = function(t, name, indent)
                         cart = cart .. " = {};\n"
                     else
                         cart = cart .. " = {\n"
-                        for k, v in pairs(value) do
+                        for k, v in _pairs(value) do
                             k = basicSerialize(k)
-                            local fname = string.format("%s[%s]", name, k)
-                            field = string.format("[%s]", k)
+                            local fname = _s_format("%s[%s]", name, k)
+                            field = _s_format("[%s]", k)
                             -- three spaces between levels
                             addtocart(v, fname, indent .. "   ", saved, field)
                         end
@@ -102,27 +124,35 @@ print_r = function(t, name, indent)
         end
 
         name = name or "__unnamed__"
-        if typeOf(t) ~= "table" then
+        if _typeOf(t) ~= "table" then
             return name .. " = " .. basicSerialize(t)
         end
         cart, autoref = "", ""
         addtocart(t, name, indent)
         return cart .. autoref
     end
-    print(table.show(t, name, indent))
+    _print(table.show(t, name, indent))
+end
+
+function print(...)
+    if is_table(select(1,...)) then
+        print_r(...)
+    else
+        _print(...)
+    end
 end
 
 -- developer print
 -- ----------------------------------------------
-dprint = function(...) if DEVELOPER == true then print(...) end end
+function dprint(...) if DEVELOPER == true then print(...) end end
 
 -- developer print_r
 -- ----------------------------------------------
-dprint_r = function(...) if DEVELOPER == true then print_r(...) end end
+function dprint_r(...) if DEVELOPER == true then print_r(...) end end
 
 -- developer toast
 -- ----------------------------------------------
-dtoast = function(...) if DEVELOPER == true then toast(...) end end
+function dtoast(...) if DEVELOPER == true then _toast(...) end end
 
 
 -- ===================================
@@ -132,26 +162,26 @@ dtoast = function(...) if DEVELOPER == true then toast(...) end end
 
 -- Strip whitespace from the beginning and end of a string
 -- ----------------------------------------------
-trim = function(s) return (s:gsub("^%s*(.-)%s*$", "%1")) end
+function trim(s) return (_s_gsub(s, "^%s*(.-)%s*$", "%1")) end
 
 -- Strip whitespace from the beginning of a string
 -- ----------------------------------------------
-ltrim = function(s) return (s:gsub("^%s*", "")) end
+function ltrim(s) return (_s_gsub(s, "^%s*", "")) end
 
 --  Strip whitespace from the end of a string
 -- ----------------------------------------------
-rtrim = function(s)
+function rtrim(s)
     local n = #s
-    while n > 0 and s:find("^%s", n) do n = n - 1 end
-    return s:sub(1, n)
+    while n > 0 and _s_find(s, "^%s", n) do n = n - 1 end
+    return _s_sub(s, 1, n)
 end
 
 -- Split a string by string
 -- ----------------------------------------------
-explode = function(s, d)
+function explode(s, d)
     d = d or "%s"
     local array, i = {}, 1
-    for str in string.gmatch(s, "([^" .. d .. "]+)") do
+    for str in _s_gmatch(s, "([^" .. d .. "]+)") do
         array[i] = str
         i = i + 1
     end
@@ -160,9 +190,9 @@ end
 
 -- Replace all occurrences of the search string with the replacement string
 -- ----------------------------------------------
-str_replace = function(f, r, s, c)
+function str_replace(f, r, s, c)
     c = c or nil
-    return string.gsub(f, r, s, c)
+    return _s_gsub(f, r, s, c)
 end
 
 -- ===================================
@@ -171,28 +201,40 @@ end
 
 --  Count all elements in an array, or something in an object
 -- ----------------------------------------------
-count = function(a)
+function count(a)
     local count = 0
-    for _ in pairs(a) do count = count + 1 end
+    for _ in _pairs(a) do count = count + 1 end
     return count
 end
 
 --  Checks if a value exists in an array/table
 -- ----------------------------------------------
-in_table = function(tb, v)
-    for i, t in ipairs(tb) do
+function in_table(tb, v)
+    for i, t in _ipairs(tb) do
         if (t == v) then return true end
     end
     return false
 end
 
-table_reverse = function(t)
+function table_reverse(t)
     local r = {}
     local i = #t
-    for k, v in ipairs(t) do
+    for k, v in _ipairs(t) do
         r[i + 1 - k] = v
     end
     return r
+end
+
+function table_key_exists(t, key)
+
+    for k, v in _pairs(t) do
+        if k == key then
+            return true
+        elseif is_table(v) then
+            return table_key_exists(v, key)
+        end
+    end
+    return false
 end
 
 -- Validate table structure and avoid prints
@@ -212,24 +254,24 @@ function validate_table(file, rules)
 
     -- if file is a table
     if is_table(file) then
-        for k, v in pairs(file) do
+        for k, v in _pairs(file) do
             if in_table(rules, gettype(v)) then
                 if is_table(v) then validate_table(v, rules) end
             else
-                return false, "_table_bad_format_"
+                return false, "_table_bad_s_format_"
             end
         end
     else
         -- reset prints functions
-        local old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast = print, toast, print_r, dprint, dprint_r, dtoast
+        local old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast = _print, _toast, print_r, dprint, dprint_r, dtoast
         --
-        print, toast, print_r, dprint, dprint_r, dtoast = nil, nil, nil, nil, nil, nil
+        _print, _toast, print_r, dprint, dprint_r, dtoast = nil, nil, nil, nil, nil, nil
 
         -- secure the load file
         local status, data = pcall(dofile, file)
 
         -- set print functions
-        print, toast, print_r, dprint, dprint_r, dtoast = old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast
+        _print, _toast, print_r, dprint, dprint_r, dtoast = old_print, old_toast, old_print_r, old_dprint, old_dprint_r, old_dtoast
 
         -- if any error on load
         if status then
@@ -247,20 +289,15 @@ end
 -- Filesystem Functions
 -- ===================================
 
--- Tells whether the filename is a directory
--- TODO : find another way
--- ----------------------------------------------
-is_dir = function(s) if is_string(s) and not s:match("(.+)%..+") then return true end return false end
-
 -- Returns trailing name component of path
 -- ----------------------------------------------
-basename = function(p) local t = explode(p, "/") return t[#t] end
+function basename(p) local t = explode(p, "/") return t[#t] end
 
 -- Returns a parent directory's path
 -- ----------------------------------------------
-dirname = function(s)
+function dirname(s)
     local t, r = explode(s, "/"), ""
-    for i, v in ipairs(t) do
+    for i, v in _ipairs(t) do
         if i < #t then r = r .. v .. "/" end
     end
     return r
@@ -268,20 +305,20 @@ end
 
 -- Returns a parent directory's path
 -- ----------------------------------------------
-file_extension = function(u)
+function file_extension(u)
     local s = u
     local t = ""
     local r = ""
 
-    for i = s:len(), 1, -1 do
-        if s:sub(i, i) ~= "." then
-            t = t .. s:sub(i, i)
+    for i = _s_len(s), 1, -1 do
+        if _s_sub(s, i, i) ~= "." then
+            t = t .. _s_sub(s, i, i)
         else
             break
         end
     end
-    for j = t:len(), 1, -1 do
-        r = r .. t:sub(j, j)
+    for j = _s_len(t), 1, -1 do
+        r = r .. _s_sub(t, j, j)
     end
 
     return r
@@ -289,19 +326,17 @@ end
 
 -- Makes directory
 -- ----------------------------------------------
-mkdir = function(p) if os.execute("mkdir -p \"" .. p .. "\"") == 0 then return true end return false end
+function mkdir(p) return _execute('mkdir -p "' .. p .. '"') == 0 end
 
 -- Removes directory
 -- ----------------------------------------------
-rmdir = function(p) if os.execute("rm -rf  \"" .. p .. "\"") == 0 then return true end return false end
+function rmdir(p) return _execute("rm -rf  \"" .. p .. "\"") == 0 end
 
-copy = function(s, d)
-    if mkdir(d) and os.execute("cp -rf \"" .. s .. "\" \"" .. d .. "\"") == 0 then return true end return false
-end
+function copy(s, d) return (mkdir(d) and _execute("cp -rf \"" .. s .. "\" \"" .. d .. "\"") == 0) end
 
 -- Returns information about a file path
 -- ----------------------------------------------
-pathinfo = function(p, op)
+function pathinfo(p, op)
     local r = {}
     local l = not op and 4 or 1
 
@@ -320,7 +355,7 @@ pathinfo = function(p, op)
         end
     end
 
-    if l == 1 then return r[string.lower(str_replace(op, "(.*)%_", ""))]
+    if l == 1 then return r[_s_lower(str_replace(op, "(.*)%_", ""))]
     else return r
     end
 end
@@ -331,14 +366,14 @@ function scandir(scan_dir, temp)
     temp = temp or "/sdcard/__temp/"
     local list_file = temp .. "_scandir_"
     --
-    local create_list_file = "ls " .. scan_dir .. " > " .. list_file
+    local create_list_file = 'ls "' .. scan_dir .. '" > ' .. list_file
 
     if not mkdir(temp) then return false, "_mkdir_" end
 
-    if os.execute(create_list_file) ~= 0 then return false, "_list_" end
+    if _execute(create_list_file) ~= 0 then return false, "_list_" end
     local lines = {}
 
-    for line in io.lines(list_file) do
+    for line in _io.lines(list_file) do
         lines[#lines + 1] = line
     end
 
@@ -347,6 +382,19 @@ function scandir(scan_dir, temp)
 end
 
 
+-- Tells whether the filename is a directory
+-- TODO : find another way
+-- ----------------------------------------------
+function is_dir(dir)
+    local f = _io.open(dir .. '__is_dir__', 'w+')
+    if f then
+        _io.close(f)
+        rmdir(dir .. '__is_dir__')
+        return true
+    end
+    return false
+end
+
 -- ===================================
 -- Android function
 -- ===================================
@@ -354,11 +402,11 @@ end
 
 -- simulate home botton
 -- ----------------------------------------------
-btn_home = function() keyevent(3) end
+function btn_home() keyevent(3) end
 
 -- simulate back botton
 -- ----------------------------------------------
-btn_back = function(i, w)
+function btn_back(i, w)
     i = i or 1
     w = w or 0.1
     while i > 0 do
@@ -366,9 +414,9 @@ btn_back = function(i, w)
 
         if not status then
             wait(1)
-            toast("keyevent(4) ERROR")
-            toast("keyevent(4) ERROR")
-            toast("keyevent(4) ERROR")
+            _toast("keyevent(4) ERROR")
+            _toast("keyevent(4) ERROR")
+            _toast("keyevent(4) ERROR")
             pcall(keyevent, 4)
         end
 
@@ -379,13 +427,13 @@ end
 
 -- simulate SWITCH botton
 -- ----------------------------------------------
-btn_switch = function(i, w)
+function btn_switch(i, w)
     i = i or 0
     w = w or 0
     while i > 0 do
-        wait(w)
         keyevent(187)
         i = i - 1
+        wait(w)
     end
 end
 
@@ -396,7 +444,7 @@ end
 
 -- Clone all table and sub tables to avoid the __pairs metamethod.
 -- ----------------------------------------------
-clone_table = function(t)
+function clone_table(t)
     local copy
     if is_table(t) then
         copy = {}
@@ -417,21 +465,21 @@ end
 
 -- check odd
 -- ----------------------------------------------
-odd = function(n) return not (n % 2 == 0) end
+function odd(n) return not (n % 2 == 0) end
 
 -- creates a random string
 -- ----------------------------------------------
-random_string = function(l)
+function random_string(l)
     local charset = {}
 
-    for i = 48, 57 do table.insert(charset, string.char(i)) end
-    for i = 65, 90 do table.insert(charset, string.char(i)) end
-    for i = 97, 122 do table.insert(charset, string.char(i)) end
+    for i = 48, 57 do table.insert(charset, _s_char(i)) end
+    for i = 65, 90 do table.insert(charset, _s_char(i)) end
+    for i = 97, 122 do table.insert(charset, _s_char(i)) end
 
     math.randomseed(os.time())
 
     if l > 0 then
-        return random_string(l - 1) .. charset[math.random(1, #charset)]
+        return random_string(l - 1) .. charset[_m_random(1, #charset)]
     else
         return ""
     end
@@ -443,31 +491,31 @@ end
 
 -- converts a location to string
 -- ----------------------------------------------
-location_to_string = function(loc) return tostring((string.format("Location(%d, %d)", loc:getX(), loc:getY()))) end
+function location_to_string(loc) return _tostring((_s_format("Location(%d, %d)", loc:getX(), loc:getY()))) end
 
 -- converts a region to string
 -- ----------------------------------------------
-region_to_string = function(r) return tostring((string.format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH()))) end
+function region_to_string(r) return _tostring((_s_format("Region(%d, %d, %d, %d)", r:getX(), r:getY(), r:getW(), r:getH()))) end
 
 -- Finds out whether a variable is a Location
 -- ----------------------------------------------
-is_location = function(v) if gettype(v) == "Location" then return true end return false end
+function is_location(v) return gettype(v) == "Location" end
 
 -- Finds out whether a variable is a Region
 -- ----------------------------------------------
-is_region = function(v) if gettype(v) == "Region" then return true end return false end
+function is_region(v) return gettype(v) == "Region" end
 
 -- Finds out whether a variable is a Match
 -- ----------------------------------------------
-is_match = function(v) if gettype(v) == "Match" then return true end return false end
+function is_match(v) return gettype(v) == "Match" end
 
 -- Finds out whether a variable is a Pattern
 -- ----------------------------------------------
-is_pattern = function(v) if gettype(v) == "Pattern" then return true, v:getFileName() end return false, "_none_" end
+function is_pattern(v) if gettype(v) == "Pattern" then return true, v:getFileName() end return false, "_none_" end
 
 -- Auto highlight any img,region,match or location
 -- ----------------------------------------------
-debug_r = function(var, title, time)
+function debug_r(var, title, time)
     if DEBUG_R == true or DEBUG_R == nil then
         local x, y, w, h = 0, 0, 0, 0
         local tp = ""
@@ -488,24 +536,24 @@ debug_r = function(var, title, time)
                 local target = m:getTarget()
                 local center = m:getCenter()
                 x = m:getX() y = m:getY() w = m:getW() h = m:getH()
-                toast("IMG - Target | " .. (title and title or ""))
+                _toast("IMG - Target | " .. (title and title or ""))
                 Region(target:getX() - 10, target:getY() - 10, 20, 20):highlight(time)
-                toast("IMG - Center | " .. (title and title or ""))
+                _toast("IMG - Center | " .. (title and title or ""))
                 Region(center:getX() - 10, center:getY() - 10, 20, 20):highlight(time)
             else
-                toast("IMG not found")
+                _toast("IMG not found")
             end
         end
-        toast(tp .. " | " .. (title and title or ""))
+        _toast(tp .. " | " .. (title and title or ""))
         Region(x, y, w, h):highlight(time)
     end
 end
 
 -- highlight a image(string)
 -- ----------------------------------------------
-img_r = function(v, r, time)
+function img_r(v, r, time)
     time = time or 2
-    if not is_string(v) then toast("strign expected at img_r ->" .. gettype(v)) return v end
+    if not is_string(v) then _toast("strign expected at img_r ->" .. gettype(v)) return v end
     v = str_replace(v, ".png", "") .. ".png"
     if DEBUG_R == true or DEBUG_R == nil then
         local t = Timer()
@@ -521,11 +569,11 @@ end
 
 -- converts a table to string
 -- ----------------------------------------------
-table_to_string = function(table, space)
+function table_to_string(table, space)
     space = space or ""
     local text = "{"
-    for key, value in pairs(table) do
-        if not is_numeric(key) then text = text .. "\n\t" .. space .. tostring(key) .. " = "
+    for key, value in _pairs(table) do
+        if not is_numeric(key) then text = text .. "\n\t" .. space .. _tostring(key) .. " = "
         end
         if gettype(value) == "Location" then
             text = text .. location_to_string(value)
@@ -536,7 +584,7 @@ table_to_string = function(table, space)
         elseif is_string(value) then
             text = text .. "'" .. value .. "'"
         elseif (is_bool(value)) then
-            text = text .. tostring(value)
+            text = text .. _tostring(value)
         else
             text = text .. value
         end
@@ -548,33 +596,40 @@ end
 
 -- Return all the values of an region,location,match or table
 -- ----------------------------------------------
-get_values = function(v)
-    if is_location(v) then return { x = v:getX(), y = v:getY() }
-    elseif is_region(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH() }
-    elseif is_match(v) then return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH(), center = get_values(v:getCenter()), score = v:getScore(), target = get_values(v:getTarget()) }
-    elseif is_table(v) then local r = {} for k, n in pairs(v) do r[#r + 1] = n
-    end return r
-    else return {}
+function get_values(v)
+    if is_location(v) then
+        return { x = v:getX(), y = v:getY() }
+    elseif is_region(v) then
+        return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH() }
+    elseif is_match(v) then
+        return { x = v:getX(), y = v:getY(), w = v:getW(), h = v:getH(), center = get_values(v:getCenter()), score = v:getScore(), target = get_values(v:getTarget()) }
+    elseif is_table(v) then
+        local r = {}
+        for k, n in _pairs(v) do
+            r[#r + 1] = n
+        end
+        return r
+    elseif is_pattern(v) then
+        return get_values(v:getTargetOffset())
+    else
+        return {}
     end
 end
 
 -- Checks the timeout of a variable
 -- ----------------------------------------------
-is_timeout = function(timer, time_out)
-    if timer:check() > time_out then return true
-    end return false
-end
+function is_timeout(timer, time_out) return timer:check() > time_out end
 
 -- Format seconds to clock time
 -- ----------------------------------------------
-get_clock = function(t)
-    t = tonumber(t)
+function get_clock(t)
+    t = _tonumber(t)
     local r = { h = 00, m = 00, s = 00 }
     local s = "00:00:00"
     if t > 0 then
-        r.h = string.format("%02.f", math.floor(t / 3600));
-        r.m = string.format("%02.f", math.floor(t / 60 - (r.m * 60)));
-        r.s = string.format("%02.f", math.floor(t - r.h * 3600 - r.m * 60));
+        r.h = _s_format("%02.f", _m_floor(t / 3600));
+        r.m = _s_format("%02.f", _m_floor(t / 60 - (r.h * 60)));
+        r.s = _s_format("%02.f", _m_floor(t - r.h * 3600 - r.m * 60));
         s = r.h .. ":" .. r.m .. ":" .. r.s
     end
     return s, r
@@ -583,11 +638,11 @@ end
 -- Extend ankulua preferencePut* to save regions
 -- lcations and tables
 -- ----------------------------------------------
-preferencePutData = function(v, o)
+function preferencePutData(v, o)
     if is_region(o) then
-        preferencePutString(v, string.format("Region(%d, %d, %d, %d)", o:getX(), o:getY(), o:getW(), o:getH()))
+        preferencePutString(v, _s_format("Region(%d, %d, %d, %d)", o:getX(), o:getY(), o:getW(), o:getH()))
     elseif is_location(o) then
-        preferencePutString(v, string.format("Location(%d, %d)", o:getX(), o:getY()))
+        preferencePutString(v, _s_format("Location(%d, %d)", o:getX(), o:getY()))
     elseif is_table(o) then
         preferencePutString(v, table_to_string(o))
     else
@@ -597,7 +652,7 @@ preferencePutData = function(v, o)
 end
 
 --
-preferenceGetData = function(v, s)
+function preferenceGetData(v, s)
     if is_string(v) and preferenceGetString(v, s) then
         return loadstring('return ' .. preferenceGetString(v, s))()
     end
@@ -628,6 +683,9 @@ array_reverse = function(...) return table_reverse(...)
 end
 -- alias of validate_table
 validate_array = function(...) return validate_table(...)
+end
+-- alias of table_key_exists
+array_key_exists = function(...) return table_key_exists(...)
 end
 -- alias of preferencePutData
 preferencePutRegion = function(...) return preferencePutData(...)
